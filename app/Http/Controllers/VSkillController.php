@@ -1,0 +1,376 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Order;
+use App\Models\Profile;
+use App\Models\Service;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
+
+class VSkillController extends Controller
+{
+    private array $kategori = [
+        'Digital Marketing',
+        'Data Science & Analysis',
+        'Microsoft Office',
+        'UI/UX Research and Design',
+        'Product and Project Management',
+        'Website & Apps Developer',
+        'Video Editing',
+        'Jasa Cek Turnitin',
+        'Penyusunan Artikel',
+        'Merapikan File/Dokumen',
+        'Public Speaking',
+        'Desain Grafis',
+        'Konsultan Keuangan',
+        'Jasa Bahasa Inggris',
+        'Jasa Penerjemah',
+    ];
+
+    public function home()
+    {
+        return view('pages.home');
+    }
+
+    public function tentang()
+    {
+        return view('pages.tentang');
+    }
+
+    public function kontak()
+    {
+        return view('pages.kontak');
+    }
+
+    public function dashboard(Request $request)
+    {
+        $services = Service::with('user.profile')
+            ->where('status', 'aktif')
+            ->when($request->kategori, fn ($query, $kategori) => $query->where('kategori', $kategori))
+            ->latest('created_at')
+            ->get();
+
+        return view('pages.dashboard', [
+            'services' => $services,
+            'kategori' => $this->kategori,
+        ]);
+    }
+
+    public function detail(Service $service)
+    {
+        $service->load('user.profile');
+
+        return view('pages.detail', compact('service'));
+    }
+
+    public function loginForm()
+    {
+        return view('auth.login');
+    }
+
+    public function login(Request $request)
+    {
+        $data = $request->validate([
+            'username' => 'required',
+            'password' => 'required',
+        ]);
+
+        $user = User::where('username', $data['username'])->first();
+
+        if ($user && Hash::check($data['password'], $user->password)) {
+            Auth::login($user);
+
+            return redirect()->intended('/dashboard');
+        }
+
+        return back()
+            ->withErrors(['username' => 'Username atau password salah.'])
+            ->withInput();
+    }
+
+    public function registerForm()
+    {
+        return view('auth.register');
+    }
+
+    public function register(Request $request)
+    {
+        $data = $request->validate([
+            'nama_lengkap' => 'required|string|max:100',
+            'email' => 'required|email|max:100|unique:users,email',
+            'username' => ['required', 'string', 'min:4', 'max:20', 'regex:/^(?=.*\d)[A-Za-z0-9_]+$/', 'unique:users,username'],
+            'whatsapp' => 'required|digits_between:10,15',
+            'password' => 'required|min:8|confirmed',
+        ], [
+            'username.regex' => 'Username harus tanpa spasi dan minimal mengandung 1 angka.',
+        ]);
+
+        $user = User::create([
+            'nama_lengkap' => $data['nama_lengkap'],
+            'email' => strtolower($data['email']),
+            'username' => $data['username'],
+            'password' => Hash::make($data['password']),
+            'role' => 'pembeli',
+        ]);
+
+        Auth::login($user);
+
+        return redirect('/profile/edit')
+            ->with('success', 'Registrasi berhasil. Lengkapi profil Anda.');
+    }
+
+    public function logout(Request $request)
+    {
+        Auth::logout();
+
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/');
+    }
+
+    public function editProfile()
+    {
+        return view('pages.profile-edit', [
+            'profile' => Auth::user()->profile,
+        ]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $profileId = Auth::user()->profile?->id;
+
+        $data = $request->validate([
+            'npm' => [
+                'required',
+                'digits_between:8,20',
+                Rule::unique('profiles', 'npm')->ignore($profileId),
+            ],
+            'prodi' => 'required|string|max:100',
+            'bio' => 'nullable|string',
+            'skill_summary' => 'nullable|string',
+            'tools_summary' => 'nullable|string',
+            'harga_mulai' => 'nullable|integer|min:0',
+            'kontak_wa' => 'nullable|digits_between:10,15',
+            'status_ketersediaan' => 'nullable|in:tersedia,sibuk',
+        ]);
+
+        Profile::updateOrCreate(
+            ['user_id' => Auth::id()],
+            $data + ['foto' => Auth::user()->profile->foto ?? 'default.jpg']
+        );
+
+        return back()->with('success', 'Profil berhasil disimpan.');
+    }
+
+    public function profile(User $user)
+    {
+        $user->load('profile', 'services');
+
+        return view('pages.profile-view', compact('user'));
+    }
+
+    public function jadiPenyediaForm()
+    {
+        return view('pages.jadi-penyedia', [
+            'user' => Auth::user(),
+            'profile' => Auth::user()->profile,
+            'isEmailUpn' => preg_match('/@student\.upnjatim\.ac\.id$/i', Auth::user()->email) === 1,
+        ]);
+    }
+
+    public function jadiPenyedia(Request $request)
+    {
+        $user = Auth::user();
+        $isEmailUpn = preg_match('/@student\.upnjatim\.ac\.id$/i', $user->email) === 1;
+
+        if (! $isEmailUpn) {
+            return back()->withErrors([
+                'email' => 'Hanya akun dengan email @student.upnjatim.ac.id yang dapat menjadi penyedia jasa. Akun ini tetap bisa digunakan sebagai pembeli.',
+            ])->withInput();
+        }
+
+        $profileId = $user->profile?->id;
+
+        $data = $request->validate([
+            'npm' => ['required', 'digits_between:8,20', Rule::unique('profiles', 'npm')->ignore($profileId)],
+            'prodi' => 'required|string|max:100',
+            'bio' => 'nullable|string',
+            'skill_summary' => 'nullable|string',
+            'tools_summary' => 'nullable|string',
+            'harga_mulai' => 'nullable|integer|min:0',
+            'kontak_wa' => 'nullable|digits_between:10,15',
+            'status_ketersediaan' => 'required|in:tersedia,sibuk',
+        ]);
+
+        Profile::updateOrCreate(
+            ['user_id' => $user->id],
+            $data + ['foto' => $user->profile->foto ?? 'default.jpg']
+        );
+
+        $user->update(['role' => 'penyedia']);
+
+        return back()->with('success', 'Akun berhasil diaktifkan sebagai penyedia jasa.');
+    }
+
+    public function createService()
+    {
+        $this->mustPenyedia();
+
+        return view('pages.service-form', [
+            'service' => new Service(),
+            'kategori' => $this->kategori,
+            'action' => route('service.store'),
+        ]);
+    }
+
+    public function storeService(Request $request)
+    {
+        $this->mustPenyedia();
+
+        Auth::user()->services()->create($this->serviceData($request));
+
+        return redirect('/dashboard')->with('success', 'Jasa berhasil ditambahkan.');
+    }
+
+    public function editService(Service $service)
+    {
+        $this->owner($service);
+
+        return view('pages.service-form', [
+            'service' => $service,
+            'kategori' => $this->kategori,
+            'action' => route('service.update', $service),
+        ]);
+    }
+
+    public function updateService(Request $request, Service $service)
+    {
+        $this->owner($service);
+
+        $service->update($this->serviceData($request));
+
+        return redirect('/dashboard')->with('success', 'Jasa berhasil diperbarui.');
+    }
+
+    public function deleteService(Service $service)
+    {
+        $this->owner($service);
+
+        $service->delete();
+
+        return redirect('/dashboard')->with('success', 'Jasa berhasil dihapus.');
+    }
+
+    public function orderForm(Service $service)
+    {
+        abort_if(Auth::id() === $service->user_id, 403, 'Penyedia tidak dapat memesan jasanya sendiri.');
+
+        return view('pages.order-form', compact('service'));
+    }
+
+    public function orderStore(Request $request, Service $service)
+    {
+        abort_if(Auth::id() === $service->user_id, 403, 'Penyedia tidak dapat memesan jasanya sendiri.');
+
+        $data = $request->validate([
+            'no_wa' => 'required|digits_between:10,15',
+            'catatan' => 'required|string',
+        ]);
+
+        Order::create($data + [
+            'service_id' => $service->id,
+            'buyer_id' => Auth::id(),
+            'seller_id' => $service->user_id,
+        ]);
+
+        return redirect('/pesanan-saya')->with('success', 'Order berhasil dibuat.');
+    }
+
+    public function pesananSaya(Request $request)
+    {
+        $orders = Order::with('service.user.profile', 'seller.profile', 'buyer.profile')
+            ->where('buyer_id', Auth::id())
+            ->when($request->status, fn ($query, $status) => $query->where('status', $status))
+            ->latest('created_at')
+            ->get();
+
+        return view('pages.orders', [
+            'orders' => $orders,
+            'mode' => 'buyer',
+        ]);
+    }
+
+    public function orderMasuk(Request $request)
+    {
+        $orders = Order::with('service.user.profile', 'buyer.profile', 'seller.profile')
+            ->where('seller_id', Auth::id())
+            ->when($request->status, fn ($query, $status) => $query->where('status', $status))
+            ->latest('created_at')
+            ->get();
+
+        return view('pages.orders', [
+            'orders' => $orders,
+            'mode' => 'seller',
+        ]);
+    }
+
+    public function orderDetail(Order $order)
+    {
+        abort_unless(Auth::id() === $order->buyer_id || Auth::id() === $order->seller_id, 403);
+
+        $order->load('service', 'buyer.profile', 'seller.profile');
+
+        return view('pages.order-detail', compact('order'));
+    }
+
+    public function orderStatus(Request $request, Order $order)
+    {
+        abort_unless($order->seller_id === Auth::id(), 403);
+
+        $data = $request->validate([
+            'status' => 'required|in:diterima,ditolak,selesai',
+        ]);
+
+        $statusSekarang = $order->status;
+        $statusBaru = $data['status'];
+
+        if ($statusSekarang === 'pending') {
+            abort_unless(in_array($statusBaru, ['diterima', 'ditolak'], true), 403, 'Order pending hanya bisa diterima atau ditolak.');
+        } elseif ($statusSekarang === 'diterima') {
+            abort_unless($statusBaru === 'selesai', 403, 'Order diterima hanya bisa diselesaikan.');
+        } elseif (in_array($statusSekarang, ['ditolak', 'selesai'], true)) {
+            abort(403, 'Status order ini sudah final dan tidak bisa diubah.');
+        }
+
+        $order->update(['status' => $statusBaru]);
+
+        return back()->with('success', 'Status order diperbarui.');
+    }
+
+    private function serviceData(Request $request): array
+    {
+        return $request->validate([
+            'judul_jasa' => 'required|string|max:100',
+            'kategori' => 'required|string|max:100',
+            'deskripsi' => 'required|string',
+            'harga' => 'required|integer|min:0',
+            'estimasi_pengerjaan' => 'nullable|string|max:50',
+            'status' => 'required|in:aktif,nonaktif',
+        ]);
+    }
+
+    private function mustPenyedia(): void
+    {
+        abort_unless(Auth::check() && Auth::user()->role === 'penyedia', 403);
+    }
+
+    private function owner(Service $service): void
+    {
+        abort_unless($service->user_id === Auth::id(), 403);
+    }
+}
