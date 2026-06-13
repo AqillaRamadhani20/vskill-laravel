@@ -70,8 +70,15 @@
             </div>
 
             <div class="detail-actions">
+                @if($order->status === 'selesai')
+                    <a href="{{ route('order.struk', $order) }}"
+                       class="btn-primary"
+                       style="background:linear-gradient(135deg,#15803d,#16a34a);">
+                        &#128196; Unduh Struk Pembelian
+                    </a>
+                @endif
                 @if($order->service)
-                    <a href="{{ route('detail', $order->service) }}" class="btn-primary">Lihat Detail Jasa</a>
+                    <a href="{{ route('detail', $order->service) }}" class="btn-outline">Lihat Detail Jasa</a>
                 @endif
                 @if($order->seller)
                     <a href="{{ route('profile.view', $order->seller) }}" class="btn-outline">Lihat Profil Penyedia</a>

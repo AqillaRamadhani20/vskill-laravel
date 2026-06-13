@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Portfolio;
 use App\Models\Profile;
 use App\Models\Service;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -169,9 +171,64 @@ class VSkillController extends Controller
 
     public function profile(User $user)
     {
-        $user->load('profile', 'services');
+        $user->load('profile', 'services', 'portfolios');
 
         return view('pages.profile-view', compact('user'));
+    }
+
+    public function portfolioCreate()
+    {
+        $this->mustPenyedia();
+
+        return view('pages.portfolio-form', ['portfolio' => new Portfolio()]);
+    }
+
+    public function portfolioStore(Request $request)
+    {
+        $this->mustPenyedia();
+
+        $data = $request->validate([
+            'judul_project' => 'required|string|max:100',
+            'deskripsi'     => 'required|string',
+            'tools'         => 'nullable|string',
+            'link_demo'     => 'nullable|url',
+        ]);
+
+        Auth::user()->portfolios()->create($data);
+
+        return redirect()->route('profile.view', Auth::id())->with('success', 'Portfolio berhasil ditambahkan.');
+    }
+
+    public function portfolioEdit(Portfolio $portfolio)
+    {
+        abort_unless($portfolio->user_id === Auth::id(), 403);
+
+        return view('pages.portfolio-form', compact('portfolio'));
+    }
+
+    public function portfolioUpdate(Request $request, Portfolio $portfolio)
+    {
+        abort_unless($portfolio->user_id === Auth::id(), 403);
+
+        $data = $request->validate([
+            'judul_project' => 'required|string|max:100',
+            'deskripsi'     => 'required|string',
+            'tools'         => 'nullable|string',
+            'link_demo'     => 'nullable|url',
+        ]);
+
+        $portfolio->update($data);
+
+        return redirect()->route('profile.view', Auth::id())->with('success', 'Portfolio berhasil diperbarui.');
+    }
+
+    public function portfolioDelete(Portfolio $portfolio)
+    {
+        abort_unless($portfolio->user_id === Auth::id(), 403);
+
+        $portfolio->delete();
+
+        return back()->with('success', 'Portfolio berhasil dihapus.');
     }
 
     public function jadiPenyediaForm()
@@ -350,6 +407,21 @@ class VSkillController extends Controller
         $order->update(['status' => $statusBaru]);
 
         return back()->with('success', 'Status order diperbarui.');
+    }
+
+    public function downloadStruk(Order $order)
+    {
+        abort_unless(Auth::id() === $order->buyer_id || Auth::id() === $order->seller_id, 403);
+        abort_unless($order->status === 'selesai', 403, 'Struk hanya tersedia untuk order yang sudah selesai.');
+
+        $order->load('service', 'buyer.profile', 'seller.profile');
+
+        $pdf = Pdf::loadView('pdf.struk-pembelian', compact('order'))
+            ->setPaper('a5', 'portrait');
+
+        $filename = 'struk-order-' . $order->id . '.pdf';
+
+        return $pdf->download($filename);
     }
 
     private function serviceData(Request $request): array

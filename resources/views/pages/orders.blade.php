@@ -68,6 +68,12 @@
                     <div class="order-actions">
                         <a href="{{ route('order.detail', $order) }}" class="btn-small-primary">Detail Order</a>
 
+                        @if($mode === 'buyer' && $order->status === 'selesai')
+                            <a href="{{ route('order.struk', $order) }}" class="btn-small-outline green">
+                                &#128196; Unduh Struk
+                            </a>
+                        @endif
+
                         @if($mode === 'seller' && $order->buyer)
                             <a href="{{ route('profile.view', $order->buyer) }}" class="btn-small-outline green">Lihat Profil Pembeli</a>
                         @elseif($mode === 'buyer' && $order->seller)
