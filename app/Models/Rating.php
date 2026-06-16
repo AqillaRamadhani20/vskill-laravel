@@ -4,18 +4,23 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Order extends Model
+class Rating extends Model
 {
     const UPDATED_AT = null;
 
     protected $fillable = [
+        'order_id',
         'service_id',
         'buyer_id',
         'seller_id',
-        'no_wa',
-        'catatan',
-        'status',
+        'rating',
+        'ulasan',
     ];
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
 
     public function service()
     {
@@ -30,10 +35,5 @@ class Order extends Model
     public function seller()
     {
         return $this->belongsTo(User::class, 'seller_id');
-    }
-
-    public function rating()
-    {
-        return $this->hasOne(Rating::class);
     }
 }

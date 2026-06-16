@@ -12,167 +12,332 @@
 </head>
 
 <body class="bg-gray-50 text-slate-800">
-    <div class="page-shell">
-        <header class="fixed-nav">
-            {{-- Topbar --}}
-            <div class="flex items-center justify-between px-6 py-2 text-xs font-semibold text-white" style="background:linear-gradient(90deg,#15803d,#16a34a);">
-                <span>&#128276; Platform Jasa Kreatif Eksklusif Mahasiswa UPN Veteran Jawa Timur</span>
-                <span class="hidden md:block">&#128222; Hubungi: +62 812-3456-7890</span>
+<div class="page-shell">
+
+    <header class="fixed-nav">
+
+        {{-- ── Topbar ── --}}
+        <div class="flex items-center justify-between px-6 py-2 text-xs font-semibold text-white"
+             style="background:linear-gradient(90deg,#064e3b,#15803d,#16a34a);">
+            <span>Platform Jasa Kreatif Eksklusif Mahasiswa UPN Veteran Jawa Timur</span>
+            <span class="hidden md:block">Hubungi: +62 812-3456-7890</span>
+        </div>
+
+        {{-- ══════════════════════════════════════════
+             DESKTOP NAV (≥768 px)
+             3-kolom grid: logo | nav-tengah | aksi-kanan
+        ══════════════════════════════════════════ --}}
+        <nav class="vs-desktop-nav">
+
+            {{-- KIRI: Logo --}}
+            <a href="{{ route('home') }}" class="vs-logo-img-link" style="justify-self:start;">
+                <img src="{{ asset('assets/images/logo.png') }}" alt="V-Skill"
+                     style="height:46px;width:auto;display:block;">
+            </a>
+
+            {{-- TENGAH: Link navigasi utama --}}
+            <div class="flex items-center gap-0.5">
+                <a href="{{ route('home') }}"
+                   class="vs-nav-link {{ request()->routeIs('home') ? 'active' : '' }}">Beranda</a>
+                <a href="{{ route('tentang') }}"
+                   class="vs-nav-link {{ request()->routeIs('tentang') ? 'active' : '' }}">Tentang Kami</a>
+                <a href="{{ route('dashboard') }}"
+                   class="vs-nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">Jelajahi Jasa</a>
+
+                @auth
+                    {{-- Pesanan Saya: tampil untuk pembeli & penyedia --}}
+                    <a href="{{ route('pesanan') }}"
+                       class="vs-nav-link {{ request()->routeIs('pesanan') ? 'active' : '' }}">Pesanan Saya</a>
+
+                    {{-- Kelola Pesanan: hanya untuk penyedia --}}
+                    @if(auth()->user()->role === 'penyedia')
+                        <a href="{{ route('order.masuk') }}"
+                           class="vs-nav-link {{ request()->routeIs('order.masuk') ? 'active' : '' }}">Kelola Pesanan</a>
+                    @endif
+                @endauth
             </div>
 
-            {{-- Main Nav --}}
-            <nav class="flex items-center justify-between bg-white px-6 py-3 shadow-md md:px-12" style="border-bottom:2px solid #f0fdf4;">
-                {{-- Logo --}}
-                <a href="{{ route('home') }}" class="flex items-center gap-2.5 group">
-                    <div class="flex h-9 w-9 items-center justify-center rounded-xl font-black text-white text-lg transition-transform group-hover:scale-105"
-                         style="background:linear-gradient(135deg,#15803d,#16a34a);box-shadow:0 4px 12px rgba(21,128,61,.35);">
-                        V
+            {{-- KANAN: Login/Daftar (guest) atau user-dropdown (auth) --}}
+            <div class="flex items-center gap-2" style="justify-self:end;">
+
+                @guest
+                    <a href="{{ route('login') }}" class="vs-btn-nav-outline">Masuk</a>
+                    <a href="{{ route('register') }}" class="vs-btn-nav-primary">Daftar Gratis</a>
+                @else
+                    @php
+                        $navFoto    = auth()->user()->profile?->foto;
+                        $navHasFoto = $navFoto && $navFoto !== 'default.jpg';
+                        $navFotoUrl = $navHasFoto ? asset('storage/foto-profil/' . $navFoto) : null;
+                        $navInitial = strtoupper(substr(auth()->user()->nama_lengkap, 0, 1));
+                        $navName    = auth()->user()->nama_lengkap;
+                        $navEmail   = auth()->user()->email;
+                        $navRole    = auth()->user()->role;
+                    @endphp
+
+                    <div class="vs-user-wrap">
+                        {{-- Trigger button --}}
+                        <button type="button" class="vs-user-btn" onclick="vsToggleDropdown(event)">
+                            <div class="vs-user-avatar"
+                                 style="background:linear-gradient(135deg,#15803d,#22c55e);">
+                                @if($navFotoUrl)
+                                    <img src="{{ $navFotoUrl }}" alt="{{ $navName }}"
+                                         class="vs-user-avatar-img"
+                                         onerror="this.style.display='none';">
+                                @else
+                                    {{ $navInitial }}
+                                @endif
+                            </div>
+                            <div class="vs-user-info">
+                                <span class="vs-user-name">{{ $navName }}</span>
+                                <span class="vs-user-role">{{ ucfirst($navRole) }}</span>
+                            </div>
+                            <svg class="vs-chevron" viewBox="0 0 16 16" width="14" height="14"
+                                 fill="none" stroke="currentColor" stroke-width="1.8"
+                                 stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 6l4 4 4-4"/>
+                            </svg>
+                        </button>
+
+                        {{-- Dropdown panel --}}
+                        <div class="vs-dropdown-menu" id="vsDropdown">
+                            <div class="vs-dropdown-header">
+                                <p class="vs-dropdown-dname">{{ $navName }}</p>
+                                <p class="vs-dropdown-email">{{ $navEmail }}</p>
+                                <span class="vs-dropdown-role-badge">{{ ucfirst($navRole) }}</span>
+                            </div>
+                            <div class="vs-dropdown-divider"></div>
+
+                            <a href="{{ route('profile.view', auth()->id()) }}" class="vs-dropdown-item">
+                                <span class="vs-di">&#128100;</span> Profil Saya
+                            </a>
+                            <a href="{{ route('profile.edit') }}" class="vs-dropdown-item">
+                                <span class="vs-di">&#9998;</span> Edit Profil
+                            </a>
+
+                            @if($navRole === 'penyedia')
+                                <a href="{{ route('jadi-penyedia') }}" class="vs-dropdown-item">
+                                    <span class="vs-di">&#9881;</span> Edit Profil Penyedia
+                                </a>
+                                <a href="{{ route('service.create') }}" class="vs-dropdown-item">
+                                    <span class="vs-di">&#43;</span> Tambah Jasa Baru
+                                </a>
+                            @elseif($navRole === 'pembeli')
+                                <a href="{{ route('jadi-penyedia') }}" class="vs-dropdown-item">
+                                    <span class="vs-di">&#128640;</span> Buka Jasa Saya
+                                </a>
+                            @endif
+
+                            @if($navRole === 'admin')
+                                <div class="vs-dropdown-divider"></div>
+                                <a href="{{ route('admin.dashboard') }}"
+                                   class="vs-dropdown-item vs-dropdown-item--admin">
+                                    <span class="vs-di">&#9881;</span> Admin Panel
+                                </a>
+                            @endif
+
+                            <div class="vs-dropdown-divider"></div>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="vs-dropdown-logout">
+                                    <span class="vs-di">&#8594;</span> Keluar
+                                </button>
+                            </form>
+                        </div>
                     </div>
-                    <div>
-                        <div class="text-lg font-black leading-tight" style="color:#15803d;letter-spacing:-.02em;">V-Skill</div>
-                        <div class="text-xs font-medium leading-none" style="color:#6b7280;">Jasa Mahasiswa UPN</div>
-                    </div>
+                @endguest
+            </div>
+        </nav>
+
+        {{-- ══════════════════════════════════════════
+             MOBILE NAV (<768 px)
+        ══════════════════════════════════════════ --}}
+        <nav class="vs-mobile-nav-bar">
+            <a href="{{ route('home') }}" class="vs-logo-img-link">
+                <img src="{{ asset('assets/images/logo.png') }}" alt="V-Skill"
+                     style="height:38px;width:auto;display:block;">
+            </a>
+
+            <button type="button" class="vs-hamburger" id="vsMobileBtn"
+                    onclick="vsToggleMobileMenu()" aria-label="Buka menu">
+                <svg id="vsHamIcon" width="20" height="20" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                    <line x1="3" y1="6"  x2="21" y2="6"/>
+                    <line x1="3" y1="12" x2="21" y2="12"/>
+                    <line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+                <svg id="vsClsIcon" width="20" height="20" viewBox="0 0 24 24"
+                     fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                     style="display:none;">
+                    <line x1="18" y1="6"  x2="6"  y2="18"/>
+                    <line x1="6"  y1="6"  x2="18" y2="18"/>
+                </svg>
+            </button>
+        </nav>
+
+        {{-- Mobile Drawer --}}
+        <div id="vsMobileMenu" class="vs-mobile-drawer" style="display:none;">
+            <div class="vs-mobile-links">
+                <a href="{{ route('home') }}"
+                   class="vs-mobile-link {{ request()->routeIs('home') ? 'active' : '' }}">
+                    Beranda
+                </a>
+                <a href="{{ route('tentang') }}"
+                   class="vs-mobile-link {{ request()->routeIs('tentang') ? 'active' : '' }}">
+                    Tentang Kami
+                </a>
+                <a href="{{ route('dashboard') }}"
+                   class="vs-mobile-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                    Jelajahi Jasa
                 </a>
 
-                {{-- Nav Links --}}
-                <div class="hidden items-center gap-1 text-sm font-semibold text-gray-600 md:flex">
-                    <a href="{{ route('home') }}"
-                       class="rounded-lg px-3 py-2 transition-all hover:bg-green-50 hover:text-green-700 {{ request()->routeIs('home') ? 'bg-green-50 text-green-700' : '' }}">
-                        Home
+                @auth
+                    <a href="{{ route('pesanan') }}"
+                       class="vs-mobile-link {{ request()->routeIs('pesanan') ? 'active' : '' }}">
+                        Pesanan Saya
                     </a>
-                    <a href="{{ route('tentang') }}"
-                       class="rounded-lg px-3 py-2 transition-all hover:bg-green-50 hover:text-green-700 {{ request()->routeIs('tentang') ? 'bg-green-50 text-green-700' : '' }}">
-                        Tentang
-                    </a>
-                    <a href="{{ route('dashboard') }}"
-                       class="rounded-lg px-3 py-2 transition-all hover:bg-green-50 hover:text-green-700 {{ request()->routeIs('dashboard') ? 'bg-green-50 text-green-700' : '' }}">
-                        Jelajahi Jasa
-                    </a>
-
-                    @auth
-                        <a href="{{ route('pesanan') }}"
-                           class="rounded-lg px-3 py-2 transition-all hover:bg-green-50 hover:text-green-700 {{ request()->routeIs('pesanan') ? 'bg-green-50 text-green-700' : '' }}">
-                            Pesanan
+                    @if(auth()->user()->role === 'penyedia')
+                        <a href="{{ route('order.masuk') }}"
+                           class="vs-mobile-link {{ request()->routeIs('order.masuk') ? 'active' : '' }}">
+                            Kelola Pesanan
                         </a>
-                        @if(auth()->user()->role === 'penyedia')
-                            <a href="{{ route('order.masuk') }}"
-                               class="rounded-lg px-3 py-2 transition-all hover:bg-green-50 hover:text-green-700 {{ request()->routeIs('order.masuk') ? 'bg-green-50 text-green-700' : '' }}">
-                                Order Masuk
-                            </a>
-                        @endif
-                    @endauth
+                    @endif
 
+                    <div class="vs-mobile-divider"></div>
+
+                    <a href="{{ route('profile.view', auth()->id()) }}" class="vs-mobile-link">
+                        Profil Saya
+                    </a>
+                    <a href="{{ route('profile.edit') }}" class="vs-mobile-link">
+                        Edit Profil
+                    </a>
+                    @if(auth()->user()->role === 'penyedia')
+                        <a href="{{ route('service.create') }}" class="vs-mobile-link">
+                            + Tambah Jasa Baru
+                        </a>
+                    @elseif(auth()->user()->role === 'pembeli')
+                        <a href="{{ route('jadi-penyedia') }}" class="vs-mobile-link">
+                            Buka Jasa Saya
+                        </a>
+                    @endif
+                    @if(auth()->user()->role === 'admin')
+                        <a href="{{ route('admin.dashboard') }}" class="vs-mobile-link vs-mobile-link--admin">
+                            Admin Panel
+                        </a>
+                    @endif
+
+                    <div class="vs-mobile-divider"></div>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="vs-mobile-logout">Keluar</button>
+                    </form>
+
+                @else
+                    <div class="vs-mobile-divider"></div>
+                    <div class="vs-mobile-auth">
+                        <a href="{{ route('login') }}" class="vs-mobile-btn-outline">Masuk</a>
+                        <a href="{{ route('register') }}" class="vs-mobile-btn-primary">Daftar Gratis</a>
+                    </div>
+                @endauth
+            </div>
+        </div>
+
+    </header>
+
+    <main class="page-main px-6">
+        <div class="mx-auto max-w-7xl">
+
+            @if(session('success'))
+                <div class="mb-6 flex items-center gap-3 rounded-2xl border px-5 py-4 text-sm font-medium"
+                     style="background:#f0fdf4;border-color:#86efac;color:#166534;">
+                    <span style="font-size:1.1rem;">&#10003;</span>
+                    {{ session('success') }}
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="mb-6 rounded-2xl border px-5 py-4 text-sm"
+                     style="background:#fef2f2;border-color:#fecaca;color:#b91c1c;">
+                    <ul class="list-disc pl-5 space-y-1">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            @yield('content')
+        </div>
+    </main>
+
+    {{-- ══════════════════════════════════════════
+         FOOTER — minimal brand, no duplicate nav
+    ══════════════════════════════════════════ --}}
+    <footer style="background:linear-gradient(135deg,#052e16,#166534);color:#fff;" class="px-6 py-10">
+        <div class="mx-auto max-w-7xl">
+            <div class="flex flex-col md:flex-row items-start justify-between gap-8 mb-8">
+
+                {{-- Brand --}}
+                <div>
+                    <div class="mb-3">
+                        <img src="{{ asset('assets/images/logo.png') }}" alt="V-Skill"
+                             style="height:52px;width:auto;display:block;filter:brightness(0) invert(1);">
+                    </div>
+                    <p class="text-sm max-w-xs leading-relaxed" style="color:rgba(255,255,255,.55);">
+                        Platform jasa kreatif eksklusif untuk mahasiswa UPN "Veteran" Jawa Timur.
+                    </p>
+                </div>
+
+                {{-- Kontak --}}
+                <div class="text-sm" style="color:rgba(255,255,255,.65);">
+                    <p class="font-bold text-white mb-3">Hubungi Kami</p>
                     <a href="{{ route('kontak') }}"
-                       class="rounded-lg px-3 py-2 transition-all hover:bg-green-50 hover:text-green-700 {{ request()->routeIs('kontak') ? 'bg-green-50 text-green-700' : '' }}">
-                        Kontak
+                       class="block hover:text-white transition-colors mb-1">
+                        Kontak &amp; Dukungan &#8594;
                     </a>
-                </div>
-
-                {{-- Right Actions --}}
-                <div class="hidden items-center gap-2 md:flex">
-                    @auth
-                        @if(auth()->user()->role === 'admin')
-                            <a href="{{ route('admin.dashboard') }}"
-                               class="flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-bold text-white transition-all hover:opacity-90 hover:-translate-y-0.5"
-                               style="background:linear-gradient(135deg,#064e3b,#15803d);box-shadow:0 4px 14px rgba(21,128,61,.3);">
-                                &#9881; Admin Panel
-                            </a>
-                        @else
-                            <a href="{{ route('jadi-penyedia') }}"
-                               class="rounded-xl border-2 px-4 py-2 text-sm font-bold transition-all hover:bg-green-50 hover:-translate-y-0.5"
-                               style="border-color:#15803d;color:#15803d;">
-                                + Buka Jasa
-                            </a>
-                        @endif
-
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="rounded-lg px-3 py-2 text-sm font-semibold text-red-600 transition-all hover:bg-red-50">
-                                Logout
-                            </button>
-                        </form>
-
-                        <a href="{{ route('profile.view', auth()->id()) }}"
-                           class="flex h-10 w-10 items-center justify-center rounded-full font-black text-white text-sm transition-all hover:scale-105 hover:shadow-lg"
-                           style="background:linear-gradient(135deg,#15803d,#22c55e);box-shadow:0 4px 12px rgba(21,128,61,.35);"
-                           title="{{ auth()->user()->nama_lengkap }}">
-                            {{ strtoupper(substr(auth()->user()->nama_lengkap, 0, 1)) }}
-                        </a>
-                    @else
-                        <a href="{{ route('login') }}"
-                           class="rounded-xl px-5 py-2 text-sm font-bold text-white transition-all hover:opacity-90 hover:-translate-y-0.5"
-                           style="background:linear-gradient(135deg,#15803d,#16a34a);box-shadow:0 4px 14px rgba(21,128,61,.3);">
-                            Login
-                        </a>
-                        <a href="{{ route('register') }}"
-                           class="rounded-xl border-2 px-5 py-2 text-sm font-bold transition-all hover:bg-green-50"
-                           style="border-color:#15803d;color:#15803d;">
-                            Daftar
-                        </a>
-                    @endauth
-                </div>
-            </nav>
-        </header>
-
-        <main class="page-main px-6">
-            <div class="mx-auto max-w-7xl">
-                @if(session('success'))
-                    <div class="mb-6 flex items-center gap-3 rounded-2xl border px-5 py-4 text-sm font-medium"
-                         style="background:#f0fdf4;border-color:#86efac;color:#166534;">
-                        <span style="font-size:1.1rem;">&#10003;</span>
-                        {{ session('success') }}
-                    </div>
-                @endif
-
-                @if($errors->any())
-                    <div class="mb-6 rounded-2xl border px-5 py-4 text-sm" style="background:#fef2f2;border-color:#fecaca;color:#b91c1c;">
-                        <ul class="list-disc pl-5 space-y-1">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-
-                @yield('content')
-            </div>
-        </main>
-
-        <footer style="background:linear-gradient(135deg,#052e16,#166534);color:#fff;" class="px-6 py-14">
-            <div class="mx-auto max-w-7xl">
-                <div class="flex flex-col md:flex-row items-start justify-between gap-8 mb-10">
-                    {{-- Brand --}}
-                    <div class="shrink-0">
-                        <div class="flex items-center gap-2.5 mb-3">
-                            <div class="flex h-9 w-9 items-center justify-center rounded-xl font-black text-green-800 text-lg" style="background:#facc15;">V</div>
-                            <span class="text-xl font-black" style="letter-spacing:-.02em;">V-Skill</span>
-                        </div>
-                        <p class="text-sm max-w-xs" style="color:rgba(255,255,255,.65);line-height:1.7;">
-                            Platform jasa kreatif eksklusif untuk mahasiswa UPN "Veteran" Jawa Timur.
-                        </p>
-                    </div>
-
-                    {{-- Links --}}
-                    <div class="grid grid-cols-2 gap-x-12 gap-y-2 text-sm" style="color:rgba(255,255,255,.75);">
-                        <a href="{{ route('home') }}" class="hover:text-white transition-colors">Home</a>
-                        <a href="{{ route('dashboard') }}" class="hover:text-white transition-colors">Jelajahi Jasa</a>
-                        <a href="{{ route('tentang') }}" class="hover:text-white transition-colors">Tentang Kami</a>
-                        <a href="{{ route('kontak') }}" class="hover:text-white transition-colors">Kontak</a>
-                        @guest
-                        <a href="{{ route('login') }}" class="hover:text-white transition-colors">Login</a>
-                        <a href="{{ route('register') }}" class="hover:text-white transition-colors">Daftar</a>
-                        @endguest
-                    </div>
-                </div>
-
-                <div class="border-t pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-xs" style="border-color:rgba(255,255,255,.12);color:rgba(255,255,255,.45);">
-                    <p>&copy; 2026 V-Skill Platform &mdash; Dibuat oleh mahasiswa Sistem Informasi UPN Veteran Jatim.</p>
-                    <p>Powered by Laravel &amp; Tailwind CSS</p>
+                    <p class="text-xs" style="color:rgba(255,255,255,.38);">+62 812-3456-7890</p>
                 </div>
             </div>
-        </footer>
-    </div>
 
-    @stack('scripts')
+            <div class="border-t pt-6 flex flex-col md:flex-row items-center justify-between gap-3 text-xs"
+                 style="border-color:rgba(255,255,255,.1);color:rgba(255,255,255,.4);">
+                <p>&copy; 2026 V-Skill Platform &mdash; Dibuat oleh mahasiswa Sistem Informasi UPN Veteran Jatim.</p>
+                <p>Powered by Laravel &amp; Tailwind CSS</p>
+            </div>
+        </div>
+    </footer>
+
+</div>{{-- .page-shell --}}
+
+@stack('scripts')
+
+<script>
+(function () {
+    /* ── Desktop user dropdown ── */
+    function vsToggleDropdown(e) {
+        e.stopPropagation();
+        var d = document.getElementById('vsDropdown');
+        if (d) d.classList.toggle('open');
+    }
+    document.addEventListener('click', function () {
+        var d = document.getElementById('vsDropdown');
+        if (d) d.classList.remove('open');
+    });
+
+    /* ── Mobile hamburger drawer ── */
+    function vsToggleMobileMenu() {
+        var menu = document.getElementById('vsMobileMenu');
+        var ham  = document.getElementById('vsHamIcon');
+        var cls  = document.getElementById('vsClsIcon');
+        if (!menu) return;
+        var isOpen = menu.style.display !== 'none';
+        menu.style.display = isOpen ? 'none' : 'block';
+        if (ham) ham.style.display = isOpen ? 'block' : 'none';
+        if (cls) cls.style.display = isOpen ? 'none'  : 'block';
+    }
+
+    window.vsToggleDropdown   = vsToggleDropdown;
+    window.vsToggleMobileMenu = vsToggleMobileMenu;
+}());
+</script>
 </body>
 </html>

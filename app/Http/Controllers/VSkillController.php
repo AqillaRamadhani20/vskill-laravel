@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Portfolio;
 use App\Models\Profile;
+use App\Models\Rating;
 use App\Models\Service;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 
 class VSkillController extends Controller
@@ -50,21 +52,30 @@ class VSkillController extends Controller
 
     public function dashboard(Request $request)
     {
-        $services = Service::with('user.profile')
+        $services = Service::with('user.profile', 'ratings')
             ->where('status', 'aktif')
             ->when($request->kategori, fn ($query, $kategori) => $query->where('kategori', $kategori))
             ->latest('created_at')
             ->get();
 
+        $jasaPerKategori = Service::where('status', 'aktif')
+            ->selectRaw('kategori, COUNT(*) as jumlah')
+            ->groupBy('kategori')
+            ->pluck('jumlah', 'kategori');
+
+        $totalJasa = Service::where('status', 'aktif')->count();
+
         return view('pages.dashboard', [
-            'services' => $services,
-            'kategori' => $this->kategori,
+            'services'        => $services,
+            'kategori'        => $this->kategori,
+            'jasaPerKategori' => $jasaPerKategori,
+            'totalJasa'       => $totalJasa,
         ]);
     }
 
     public function detail(Service $service)
     {
-        $service->load('user.profile');
+        $service->load('user.profile', 'ratings.buyer.profile');
 
         return view('pages.detail', compact('service'));
     }
@@ -105,7 +116,6 @@ class VSkillController extends Controller
             'nama_lengkap' => 'required|string|max:100',
             'email' => 'required|email|max:100|unique:users,email',
             'username' => ['required', 'string', 'min:4', 'max:20', 'regex:/^(?=.*\d)[A-Za-z0-9_]+$/', 'unique:users,username'],
-            'whatsapp' => 'required|digits_between:10,15',
             'password' => 'required|min:8|confirmed',
         ], [
             'username.regex' => 'Username harus tanpa spasi dan minimal mengandung 1 angka.',
@@ -159,11 +169,28 @@ class VSkillController extends Controller
             'harga_mulai' => 'nullable|integer|min:0',
             'kontak_wa' => 'nullable|digits_between:10,15',
             'status_ketersediaan' => 'nullable|in:tersedia,sibuk',
+            'foto' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
+
+        unset($data['foto']); // remove UploadedFile instance from validated array
+
+        $fotoLama = Auth::user()->profile?->foto ?? 'default.jpg';
+
+        if ($request->hasFile('foto')) {
+            if ($fotoLama !== 'default.jpg') {
+                Storage::disk('public')->delete('foto-profil/' . $fotoLama);
+            }
+            $ext      = $request->file('foto')->getClientOriginalExtension();
+            $filename = time() . '_' . Auth::id() . '.' . $ext;
+            $request->file('foto')->storeAs('foto-profil', $filename, 'public');
+            $foto = $filename;
+        } else {
+            $foto = $fotoLama;
+        }
 
         Profile::updateOrCreate(
             ['user_id' => Auth::id()],
-            $data + ['foto' => Auth::user()->profile->foto ?? 'default.jpg']
+            $data + ['foto' => $foto]
         );
 
         return back()->with('success', 'Profil berhasil disimpan.');
@@ -171,7 +198,7 @@ class VSkillController extends Controller
 
     public function profile(User $user)
     {
-        $user->load('profile', 'services', 'portfolios');
+        $user->load('profile', 'services.ratings', 'portfolios');
 
         return view('pages.profile-view', compact('user'));
     }
@@ -262,11 +289,28 @@ class VSkillController extends Controller
             'harga_mulai' => 'nullable|integer|min:0',
             'kontak_wa' => 'nullable|digits_between:10,15',
             'status_ketersediaan' => 'required|in:tersedia,sibuk',
+            'foto' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
+
+        unset($data['foto']); // remove UploadedFile instance
+
+        $fotoLama = $user->profile?->foto ?? 'default.jpg';
+
+        if ($request->hasFile('foto')) {
+            if ($fotoLama !== 'default.jpg') {
+                Storage::disk('public')->delete('foto-profil/' . $fotoLama);
+            }
+            $ext      = $request->file('foto')->getClientOriginalExtension();
+            $filename = time() . '_' . $user->id . '.' . $ext;
+            $request->file('foto')->storeAs('foto-profil', $filename, 'public');
+            $foto = $filename;
+        } else {
+            $foto = $fotoLama;
+        }
 
         Profile::updateOrCreate(
             ['user_id' => $user->id],
-            $data + ['foto' => $user->profile->foto ?? 'default.jpg']
+            $data + ['foto' => $foto]
         );
 
         $user->update(['role' => 'penyedia']);
@@ -334,15 +378,22 @@ class VSkillController extends Controller
     {
         abort_if(Auth::id() === $service->user_id, 403, 'Penyedia tidak dapat memesan jasanya sendiri.');
 
+        $noWa = Auth::user()->profile?->kontak_wa;
+
+        if (! $noWa) {
+            return back()->withErrors(['no_wa' => 'Tambahkan nomor WhatsApp di profil kamu sebelum memesan.']);
+        }
+
         $data = $request->validate([
-            'no_wa' => 'required|digits_between:10,15',
             'catatan' => 'required|string',
         ]);
 
-        Order::create($data + [
+        Order::create([
             'service_id' => $service->id,
-            'buyer_id' => Auth::id(),
-            'seller_id' => $service->user_id,
+            'buyer_id'   => Auth::id(),
+            'seller_id'  => $service->user_id,
+            'no_wa'      => $noWa,
+            'catatan'    => $data['catatan'],
         ]);
 
         return redirect('/pesanan-saya')->with('success', 'Order berhasil dibuat.');
@@ -380,9 +431,32 @@ class VSkillController extends Controller
     {
         abort_unless(Auth::id() === $order->buyer_id || Auth::id() === $order->seller_id, 403);
 
-        $order->load('service', 'buyer.profile', 'seller.profile');
+        $order->load('service', 'buyer.profile', 'seller.profile', 'rating');
 
         return view('pages.order-detail', compact('order'));
+    }
+
+    public function storeRating(Request $request, Order $order)
+    {
+        abort_unless(Auth::id() === $order->buyer_id, 403);
+        abort_unless($order->status === 'selesai', 403, 'Hanya order selesai yang bisa dirating.');
+        abort_if($order->rating()->exists(), 403, 'Kamu sudah memberikan rating untuk order ini.');
+
+        $data = $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'ulasan' => 'nullable|string|max:500',
+        ]);
+
+        Rating::create([
+            'order_id'   => $order->id,
+            'service_id' => $order->service_id,
+            'buyer_id'   => Auth::id(),
+            'seller_id'  => $order->seller_id,
+            'rating'     => $data['rating'],
+            'ulasan'     => $data['ulasan'] ?? null,
+        ]);
+
+        return back()->with('success', 'Rating berhasil dikirim. Terima kasih!');
     }
 
     public function orderStatus(Request $request, Order $order)

@@ -27,4 +27,19 @@ class Service extends Model
     {
         return $this->hasMany(Order::class);
     }
+
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class);
+    }
+
+    public function avgRating(): float
+    {
+        return round((float) $this->ratings->avg('rating'), 1);
+    }
+
+    public function ratingCount(): int
+    {
+        return $this->ratings->count();
+    }
 }
