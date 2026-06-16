@@ -1,3 +1,6 @@
 {
-    "providers": ["php"]
+    "providers": ["php"],
+    "build": {
+        "phpExtensions": ["gd", "pdo_mysql", "mbstring", "xml", "bcmath", "tokenizer", "fileinfo", "ctype"]
+    }
 }
