@@ -30,9 +30,9 @@ class DatabaseSeeder extends Seeder
 (14, 'iqbal', 'jukifze@gmail.com', 'dahewlll', '\$2y\$10\$WR3RDtyAGYIuoUaAr1uhn.i7IaJ9GalBVVbrJ23M4CNCjdyefpXMe', 'pembeli', 0, '2026-04-16 15:01:40');
 
 {$ignore} INTO `profiles` (`id`, `user_id`, `npm`, `prodi`, `foto`, `bio`, `skill_summary`, `tools_summary`, `harga_mulai`, `kontak_wa`, `status_ketersediaan`) VALUES
-(1, 1, '24082010168', 'Sistem Informasi', 'aqilla-rasya.png', 'Saya adalah mahasiswa yang berfokus pada pengembangan website modern untuk UMKM. Berpengalaman dalam membuat website company profile, landing page, dan sistem sederhana berbasis web.', 'Web Development,UI/UX Design,Laravel', 'VS Code,Figma,Laravel,React,GitHub', 500000, '6281234567890', 'tersedia'),
-(10, 12, '24082010141', 'Sistem informasi', 'fatih-athala.jpg', 'Mahasiswa yang berfokus pada desain UI/UX dan pengembangan solusi digital untuk kebutuhan akademik maupun UMKM.', 'UI/UX Design, Wireframing, Prototype, Product Thinking', 'Figma, Canva', 100000, '081234567801', 'tersedia'),
-(11, 11, '24082010150', 'Sistem Informasi', 'iqbal-maulana.jpg', 'Mahasiswa yang fokus pada copywriting, dokumentasi produk, dan pembuatan konten digital untuk kebutuhan bisnis dan project.', 'Copywriting, Product Documentation', '0', 30000, '081234567802', 'tersedia'),
+(1, 1, '24082010168', 'Sistem Informasi', '1781494769_1.jpeg', 'Saya adalah mahasiswa yang berfokus pada pengembangan website modern untuk UMKM. Berpengalaman dalam membuat website company profile, landing page, dan sistem sederhana berbasis web.', 'Web Development,UI/UX Design,Laravel', 'VS Code,Figma,Laravel,React,GitHub', 500000, '6281234567890', 'tersedia'),
+(10, 12, '24082010141', 'Sistem informasi', 'fatih.jpeg', 'Mahasiswa yang berfokus pada desain UI/UX dan pengembangan solusi digital untuk kebutuhan akademik maupun UMKM.', 'UI/UX Design, Wireframing, Prototype, Product Thinking', 'Figma, Canva', 100000, '081234567801', 'tersedia'),
+(11, 11, '24082010150', 'Sistem Informasi', 'iqbal.jpeg', 'Mahasiswa yang fokus pada copywriting, dokumentasi produk, dan pembuatan konten digital untuk kebutuhan bisnis dan project.', 'Copywriting, Product Documentation', '0', 30000, '081234567802', 'tersedia'),
 (12, 13, '24082010166', 'Sistem Informasi', 'default.jpg', 'aku kaka', 'ui ux', '0', 25000, '0881328382', 'sibuk');
 
 {$ignore} INTO `services` (`id`, `user_id`, `judul_jasa`, `kategori`, `deskripsi`, `harga`, `estimasi_pengerjaan`, `status`, `created_at`) VALUES
@@ -46,8 +46,11 @@ class DatabaseSeeder extends Seeder
 {$ignore} INTO `portfolio` (`id`, `user_id`, `judul_project`, `deskripsi`, `tools`, `link_demo`, `created_at`) VALUES
 (1, 11, 'Copywriting Konten Promosi UMKM', 'Membuat copywriting dan caption promosi untuk media sosial UMKM agar lebih menarik dan persuasif.', 'Google Docs, Canva', NULL, '2026-04-17 06:35:01'),
 (2, 11, 'Dokumentasi Fitur Aplikasi Laundry', 'Menyusun dokumentasi fitur dan alur penggunaan aplikasi laundry untuk kebutuhan presentasi project.', 'Notion, Google Docs', NULL, '2026-04-17 06:35:01'),
-(3, 1, 'Copywriting Konten Promosi UMKM', 'Membuat copywriting dan caption promosi untuk media sosial UMKM agar lebih menarik dan persuasif.', 'Google Docs, Canva', NULL, '2026-04-17 06:35:43'),
-(4, 1, 'Dokumentasi Fitur Aplikasi Laundry', 'Menyusun dokumentasi fitur dan alur penggunaan aplikasi laundry untuk kebutuhan presentasi project.', 'Notion, Google Docs', NULL, '2026-04-17 06:35:43');
+(3, 1, '🏆 Juara 2 Kompetisi Web Design ITATS 2025', 'Meraih juara 2 dalam kompetisi web design tingkat nasional antar mahasiswa. Membuat landing page startup edutech dengan desain modern dan responsif.', 'Figma, HTML, CSS, JavaScript', NULL, '2026-04-17 06:35:43'),
+(4, 1, '💻 Website Company Profile UMKM Surabaya', 'Membangun website company profile untuk UMKM kuliner di Surabaya lengkap dengan halaman produk, galeri, dan formulir kontak. Berhasil meningkatkan jangkauan pelanggan online.', 'Laravel, Tailwind CSS, MySQL', NULL, '2026-04-17 06:35:44'),
+(5, 1, '📱 Social Media Management Toko Online', 'Mengelola akun Instagram dan TikTok toko fashion selama 3 bulan. Konten yang dibuat berhasil meningkatkan followers 40% dan engagement rate rata-rata 8%.', 'Canva, CapCut, Meta Business Suite', NULL, '2026-04-17 06:35:45'),
+(6, 1, '🌐 Sistem Informasi Jadwal Kuliah', 'Membuat sistem informasi jadwal kuliah berbasis web untuk mahasiswa Sistem Informasi UPN Jawa Timur sebagai project akhir mata kuliah Pemrograman Web.', 'Laravel, Bootstrap, MySQL', NULL, '2026-04-17 06:35:46'),
+(7, 1, '🏆 Finalis Hackathon Dicoding x Kominfo 2025', 'Masuk tahap final hackathon nasional dengan membuat aplikasi manajemen sampah berbasis web. Bersama tim 3 orang berhasil menyelesaikan MVP dalam 24 jam.', 'React, Node.js, Firebase', NULL, '2026-04-17 06:35:47');
 
 {$ignore} INTO `orders` (`id`, `service_id`, `buyer_id`, `seller_id`, `no_wa`, `catatan`, `status`, `created_at`) VALUES
 (2, 1, 9, 1, '0837626462763', 'buat tugas', 'pending', '2026-04-15 06:52:17'),
