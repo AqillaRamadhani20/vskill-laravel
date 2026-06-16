@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->string('username', 50)->unique();
             $table->string('password');
 
-            $table->enum('role', ['pembeli', 'penyedia'])
+            $table->enum('role', ['pembeli', 'penyedia', 'admin'])
                 ->default('pembeli');
 
             $table->boolean('is_verified')
