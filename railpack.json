@@ -1,6 +1,10 @@
 {
     "providers": ["php"],
-    "build": {
-        "phpExtensions": ["gd", "pdo_mysql", "mbstring", "xml", "bcmath", "tokenizer", "fileinfo", "ctype"]
+    "steps": {
+        "install:composer": {
+            "cmds": [
+                "composer install --optimize-autoloader --no-scripts --no-interaction --ignore-platform-reqs"
+            ]
+        }
     }
 }
