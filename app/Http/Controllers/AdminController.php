@@ -2,14 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Exports\OrdersExport;
-use App\Exports\UsersExport;
 use App\Models\Order;
 use App\Models\Service;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
-use Maatwebsite\Excel\Facades\Excel;
 
 class AdminController extends Controller
 {
@@ -152,17 +149,4 @@ class AdminController extends Controller
         return $pdf->download('laporan-order-vskill-' . now()->format('Ymd') . '.pdf');
     }
 
-    public function exportExcelOrder()
-    {
-        $filename = 'laporan-order-vskill-' . now()->format('Ymd') . '.xlsx';
-
-        return Excel::download(new OrdersExport(), $filename);
-    }
-
-    public function exportExcelUser()
-    {
-        $filename = 'laporan-user-vskill-' . now()->format('Ymd') . '.xlsx';
-
-        return Excel::download(new UsersExport(), $filename);
-    }
 }

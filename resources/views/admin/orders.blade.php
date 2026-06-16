@@ -11,10 +11,6 @@
            class="flex items-center gap-2 text-xs bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors font-medium">
             <span>PDF</span> Unduh Laporan Order
         </a>
-        <a href="{{ route('admin.export.excel.order') }}"
-           class="flex items-center gap-2 text-xs bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg transition-colors font-medium">
-            <span>XLS</span> Unduh Excel Order
-        </a>
     </div>
 
     {{-- Filter --}}

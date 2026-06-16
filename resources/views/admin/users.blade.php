@@ -7,10 +7,6 @@
 
     {{-- Export --}}
     <div class="flex gap-3 mb-4">
-        <a href="{{ route('admin.export.excel.user') }}"
-           class="flex items-center gap-2 text-xs bg-green-700 hover:bg-green-800 text-white px-4 py-2 rounded-lg transition-colors font-medium">
-            <span>XLS</span> Unduh Excel User
-        </a>
         <a href="{{ route('admin.export.pdf.ringkasan') }}" target="_blank"
            class="flex items-center gap-2 text-xs bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors font-medium">
             <span>PDF</span> Laporan Ringkasan

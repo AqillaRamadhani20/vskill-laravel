@@ -61,8 +61,6 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
 
     Route::get('/export/pdf/ringkasan', [AdminController::class, 'exportPdfRingkasan'])->name('export.pdf.ringkasan');
     Route::get('/export/pdf/order', [AdminController::class, 'exportPdfOrder'])->name('export.pdf.order');
-    Route::get('/export/excel/order', [AdminController::class, 'exportExcelOrder'])->name('export.excel.order');
-    Route::get('/export/excel/user', [AdminController::class, 'exportExcelUser'])->name('export.excel.user');
 });
 
 Route::redirect('/index.php', '/');

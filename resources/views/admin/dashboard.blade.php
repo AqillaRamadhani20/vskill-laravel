@@ -89,26 +89,6 @@
                     <p class="text-xs text-gray-400">Detail semua transaksi</p>
                 </div>
             </a>
-            <a href="{{ route('admin.export.excel.order') }}"
-               class="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-green-200 rounded-xl hover:bg-green-50 hover:border-green-400 transition-colors group">
-                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                    <span class="text-green-700 font-bold text-xs">XLS</span>
-                </div>
-                <div class="text-center">
-                    <p class="text-xs font-semibold text-gray-700">Excel Order</p>
-                    <p class="text-xs text-gray-400">Data order (.xlsx)</p>
-                </div>
-            </a>
-            <a href="{{ route('admin.export.excel.user') }}"
-               class="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-green-200 rounded-xl hover:bg-green-50 hover:border-green-400 transition-colors group">
-                <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 transition-colors">
-                    <span class="text-green-700 font-bold text-xs">XLS</span>
-                </div>
-                <div class="text-center">
-                    <p class="text-xs font-semibold text-gray-700">Excel User</p>
-                    <p class="text-xs text-gray-400">Data pengguna (.xlsx)</p>
-                </div>
-            </a>
         </div>
     </div>
 
