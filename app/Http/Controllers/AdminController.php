@@ -107,7 +107,7 @@ class AdminController extends Controller
 
     public function orders(Request $request)
     {
-        $orders = Order::with('service', 'buyer', 'seller')
+        $orders = Order::with('service', 'buyer', 'seller', 'rating')
             ->when($request->status, fn ($q, $status) => $q->where('status', $status))
             ->latest()
             ->get();

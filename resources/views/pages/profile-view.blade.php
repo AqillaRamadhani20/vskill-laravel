@@ -202,7 +202,7 @@
                                     <h3 class="pv-svc-title">{{ $service->judul_jasa }}</h3>
                                     <p class="pv-svc-desc">{{ mb_strlen($service->deskripsi) > 80 ? mb_substr($service->deskripsi, 0, 80) . '...' : $service->deskripsi }}</p>
                                     <div class="pv-svc-footer">
-                                        <strong class="pv-svc-price">Rp{{ number_format($service->harga, 0, ',', '.') }}</strong>
+                                        <strong class="pv-svc-price">Est. Rp{{ number_format($service->harga, 0, ',', '.') }}</strong>
                                         @if($service->estimasi_pengerjaan)
                                             <span class="pv-svc-est">{{ $service->estimasi_pengerjaan }}</span>
                                         @endif
@@ -238,7 +238,13 @@
                         <div class="pv-portfolio-timeline-dot"></div>
                         <div class="pv-portfolio-content">
                             <div class="pv-portfolio-top">
-                                <h3 class="pv-portfolio-title">{{ $portfolio->judul_project }}</h3>
+                                @if($portfolio->link_demo)
+                                    <a href="{{ $portfolio->link_demo }}" target="_blank" rel="noopener noreferrer" class="pv-portfolio-title-link">
+                                        <h3 class="pv-portfolio-title">{{ $portfolio->judul_project }}</h3>
+                                    </a>
+                                @else
+                                    <h3 class="pv-portfolio-title">{{ $portfolio->judul_project }}</h3>
+                                @endif
                                 @auth
                                     @if($isOwn)
                                         <div class="pv-portfolio-actions">

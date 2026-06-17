@@ -80,7 +80,7 @@
             <div class="pd-info-row">
                 <div class="pd-info-box">
                     <div class="pd-info-icon">💰</div>
-                    <span class="pd-info-label">Harga</span>
+                    <span class="pd-info-label">Estimasi Harga</span>
                     <strong class="pd-info-value green">Rp {{ number_format($service->harga, 0, ',', '.') }}</strong>
                 </div>
                 <div class="pd-info-box">
@@ -200,7 +200,7 @@
         <aside class="pd-sidebar">
             <div class="pd-price-card">
                 <div class="pd-price-header">
-                    <span class="pd-price-label">Harga Jasa</span>
+                    <span class="pd-price-label">Estimasi Harga</span>
                     <strong class="pd-price-value">Rp {{ number_format($service->harga, 0, ',', '.') }}</strong>
                 </div>
 

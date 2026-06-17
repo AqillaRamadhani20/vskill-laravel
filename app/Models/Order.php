@@ -15,6 +15,11 @@ class Order extends Model
         'no_wa',
         'catatan',
         'status',
+        'konfirmasi_pembeli',
+    ];
+
+    protected $casts = [
+        'konfirmasi_pembeli' => 'boolean',
     ];
 
     public function service()

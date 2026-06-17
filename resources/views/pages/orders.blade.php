@@ -68,6 +68,7 @@
                                 <span class="ol-dot {{ $st }}"></span>
                                 {{ $statusMeta['label'] }}
                             </span>
+                            <span class="ol-order-id">#VSKL-{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}</span>
                         </div>
                         <h2 class="ol-card-title">{{ $order->service->judul_jasa ?? 'Jasa tidak tersedia' }}</h2>
                         <p class="ol-card-person">
@@ -76,7 +77,7 @@
                         </p>
                     </div>
                     <div class="ol-price-box">
-                        <span>Harga</span>
+                        <span>Estimasi Harga</span>
                         <strong>Rp {{ number_format($order->service->harga ?? 0, 0, ',', '.') }}</strong>
                     </div>
                 </div>
@@ -108,7 +109,7 @@
                         Detail Order
                     </a>
 
-                    @if($mode === 'buyer' && $order->status === 'selesai')
+                    @if($mode === 'buyer' && $order->status === 'selesai' && $order->konfirmasi_pembeli)
                         <a href="{{ route('order.struk', $order) }}" class="ol-btn-struk">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                             Unduh Struk
@@ -146,6 +147,21 @@
                     @endif
                 </div>
 
+                {{-- Buyer: konfirmasi selesai --}}
+                @if($mode === 'buyer' && $order->status === 'selesai' && !$order->konfirmasi_pembeli)
+                    <form method="POST" action="{{ route('order.konfirmasi', $order) }}" class="ol-status-form">
+                        @csrf
+                        <p class="ol-status-label" style="color:#92400e;">Penyedia menandai order selesai. Konfirmasi penerimaan hasil kerja:</p>
+                        <div class="ol-status-btns">
+                            <button type="submit" class="ol-status-btn complete"
+                                    onclick="return confirm('Konfirmasi bahwa order ini sudah selesai?')">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                Konfirmasi Selesai
+                            </button>
+                        </div>
+                    </form>
+                @endif
+
                 {{-- Seller status management --}}
                 @if($mode === 'seller')
                     @if($order->status === 'pending')
@@ -181,10 +197,17 @@
                             Order ini telah ditolak dan tidak dapat diubah lagi.
                         </div>
                     @elseif($order->status === 'selesai')
-                        <div class="ol-final-note completed">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                            Order ini sudah selesai. Kerja bagus!
-                        </div>
+                        @if($order->konfirmasi_pembeli)
+                            <div class="ol-final-note completed">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                Order selesai &amp; dikonfirmasi pembeli. Kerja bagus!
+                            </div>
+                        @else
+                            <div class="ol-final-note completed" style="background:#fffbeb;border-color:#fde68a;color:#92400e;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                Menunggu konfirmasi dari pembeli.
+                            </div>
+                        @endif
                     @endif
                 @endif
             </article>

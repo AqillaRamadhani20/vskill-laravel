@@ -165,7 +165,7 @@
 
 {{-- NO STRUK --}}
 <div class="no-struk">
-    No. Struk: <strong>VSKL-{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}</strong>
+    No. Order / Struk: <strong>VSKL-{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}</strong>
     &nbsp;&nbsp;|&nbsp;&nbsp;
     Dicetak: {{ now()->format('d M Y, H:i') }} WIB
 </div>
@@ -193,8 +193,8 @@
 <div class="section">
     <div class="price-box">
         <div>
-            <div class="price-label">Total Pembayaran</div>
-            <div style="font-size:9px;opacity:.7;margin-top:2px;">Sudah termasuk biaya layanan</div>
+            <div class="price-label">Estimasi Harga</div>
+            <div style="font-size:9px;opacity:.7;margin-top:2px;">Harga sesuai kesepakatan dengan penyedia</div>
         </div>
         <div class="price-value">Rp {{ number_format($order->service->harga ?? 0, 0, ',', '.') }}</div>
     </div>

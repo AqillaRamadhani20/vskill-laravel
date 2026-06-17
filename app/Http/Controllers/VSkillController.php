@@ -429,17 +429,30 @@ class VSkillController extends Controller
 
     public function orderDetail(Order $order)
     {
-        abort_unless(Auth::id() === $order->buyer_id || Auth::id() === $order->seller_id, 403);
+        $isAdmin = Auth::check() && Auth::user()->role === 'admin';
+        abort_unless($isAdmin || Auth::id() === $order->buyer_id || Auth::id() === $order->seller_id, 403);
 
         $order->load('service', 'buyer.profile', 'seller.profile', 'rating');
 
         return view('pages.order-detail', compact('order'));
     }
 
+    public function orderKonfirmasi(Order $order)
+    {
+        abort_unless(Auth::id() === $order->buyer_id, 403);
+        abort_unless($order->status === 'selesai', 403, 'Konfirmasi hanya bisa dilakukan pada order yang sudah selesai.');
+        abort_if($order->konfirmasi_pembeli, 403, 'Kamu sudah mengkonfirmasi order ini.');
+
+        $order->update(['konfirmasi_pembeli' => true]);
+
+        return back()->with('success', 'Konfirmasi selesai berhasil. Kamu sekarang dapat mengunduh struk dan memberikan rating.');
+    }
+
     public function storeRating(Request $request, Order $order)
     {
         abort_unless(Auth::id() === $order->buyer_id, 403);
         abort_unless($order->status === 'selesai', 403, 'Hanya order selesai yang bisa dirating.');
+        abort_unless($order->konfirmasi_pembeli, 403, 'Konfirmasi selesai terlebih dahulu sebelum memberikan rating.');
         abort_if($order->rating()->exists(), 403, 'Kamu sudah memberikan rating untuk order ini.');
 
         $data = $request->validate([
@@ -487,6 +500,7 @@ class VSkillController extends Controller
     {
         abort_unless(Auth::id() === $order->buyer_id || Auth::id() === $order->seller_id, 403);
         abort_unless($order->status === 'selesai', 403, 'Struk hanya tersedia untuk order yang sudah selesai.');
+        abort_unless($order->konfirmasi_pembeli, 403, 'Struk hanya tersedia setelah pembeli mengkonfirmasi selesai.');
 
         $order->load('service', 'buyer.profile', 'seller.profile');
 

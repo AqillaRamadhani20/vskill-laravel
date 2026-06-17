@@ -44,6 +44,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/order-status/{order}', [VSkillController::class, 'orderStatus'])->name('order.status');
     Route::get('/order-struk/{order}', [VSkillController::class, 'downloadStruk'])->name('order.struk');
     Route::post('/order/{order}/rating', [VSkillController::class, 'storeRating'])->name('rating.store');
+    Route::post('/order/{order}/konfirmasi', [VSkillController::class, 'orderKonfirmasi'])->name('order.konfirmasi');
 });
 
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {

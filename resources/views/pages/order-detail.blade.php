@@ -12,7 +12,9 @@
         default    => ['badge' => 'badge-yellow', 'label' => 'Pending',  'color' => '#b45309', 'bg' => '#fffbeb'],
     };
 
-    $isBuyer = auth()->id() === $order->buyer_id;
+    $isBuyer  = auth()->id() === $order->buyer_id;
+    $isAdmin  = auth()->user()?->role === 'admin';
+    $orderKode = 'VSKL-' . str_pad($order->id, 5, '0', STR_PAD_LEFT);
 
     // WA number formatting
     $waNum = null;
@@ -46,7 +48,10 @@
             {{ $statusMeta['label'] }}
         </span>
         <h1 class="odt-status-title">Detail Order</h1>
-        <p class="odt-status-sub">Untuk jasa <strong>{{ $order->service->judul_jasa ?? 'Tidak tersedia' }}</strong></p>
+        <p class="odt-status-sub">
+            No. Order: <strong>{{ $orderKode }}</strong> &bull;
+            Jasa: <strong>{{ $order->service->judul_jasa ?? 'Tidak tersedia' }}</strong>
+        </p>
     </div>
 
     {{-- Progress Timeline --}}
@@ -152,7 +157,7 @@
                     </div>
                     <h3 class="odt-svc-title">{{ $order->service->judul_jasa ?? 'Jasa tidak tersedia' }}</h3>
                     <div class="odt-svc-price">
-                        <span>Harga Jasa</span>
+                        <span>Estimasi Harga</span>
                         <strong>Rp {{ number_format($order->service->harga ?? 0, 0, ',', '.') }}</strong>
                     </div>
                     @if($order->service?->estimasi_pengerjaan)
@@ -170,7 +175,7 @@
 
                 {{-- Actions --}}
                 <div class="odt-actions">
-                    @if($st === 'selesai')
+                    @if($st === 'selesai' && $order->konfirmasi_pembeli)
                         <a href="{{ route('order.struk', $order) }}" class="btn-primary w-full">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                             Unduh Struk Pembelian
@@ -197,8 +202,23 @@
                     @endif
                 </div>
 
-                {{-- Rating form: buyer, selesai, belum rating --}}
-                @if($isBuyer && $st === 'selesai')
+                {{-- Buyer: konfirmasi selesai (sebelum rating) --}}
+                @if($isBuyer && $st === 'selesai' && !$order->konfirmasi_pembeli)
+                    <div class="odt-konfirmasi-box">
+                        <p class="odt-konfirmasi-title">Konfirmasi Penyelesaian</p>
+                        <p class="odt-konfirmasi-sub">Penyedia sudah menandai order selesai. Apakah kamu sudah menerima hasil kerjanya?</p>
+                        <form method="POST" action="{{ route('order.konfirmasi', $order) }}">
+                            @csrf
+                            <button type="submit" class="odt-manage-btn complete w-full"
+                                    onclick="return confirm('Konfirmasi bahwa order ini sudah selesai?')">
+                                ✓ Konfirmasi Selesai
+                            </button>
+                        </form>
+                    </div>
+                @endif
+
+                {{-- Rating form: buyer, selesai, sudah konfirmasi --}}
+                @if($isBuyer && $st === 'selesai' && $order->konfirmasi_pembeli)
                     @if($order->rating)
                         <div class="odt-rating-done">
                             <p class="odt-rating-done-label">Rating kamu</p>
@@ -237,8 +257,8 @@
                     @endif
                 @endif
 
-                {{-- Seller management --}}
-                @if(!$isBuyer)
+                {{-- Seller management (disembunyikan dari admin) --}}
+                @if(!$isBuyer && !$isAdmin)
                     <div class="odt-seller-manage">
                         <p class="odt-manage-title">Kelola Order</p>
                         @if($st === 'pending')
@@ -263,10 +283,26 @@
                                 </button>
                             </form>
                         @elseif($st === 'selesai')
-                            <div class="odt-manage-note completed">Order telah selesai.</div>
+                            @if($order->konfirmasi_pembeli)
+                                <div class="odt-manage-note completed">Order selesai &amp; dikonfirmasi pembeli.</div>
+                            @else
+                                <div class="odt-manage-note completed" style="background:#fffbeb;border-color:#fde68a;color:#92400e;">
+                                    Menunggu konfirmasi dari pembeli.
+                                </div>
+                            @endif
                         @elseif($st === 'ditolak')
                             <div class="odt-manage-note rejected">Order telah ditolak.</div>
                         @endif
+                    </div>
+                @endif
+
+                {{-- Info untuk admin --}}
+                @if($isAdmin)
+                    <div class="odt-seller-manage">
+                        <p class="odt-manage-title">Info Admin</p>
+                        <div class="odt-manage-note completed" style="text-align:center;">
+                            Konfirmasi Pembeli: <strong>{{ $order->konfirmasi_pembeli ? 'Sudah' : 'Belum' }}</strong>
+                        </div>
                     </div>
                 @endif
 

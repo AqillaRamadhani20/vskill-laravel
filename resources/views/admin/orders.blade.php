@@ -40,13 +40,15 @@
             <table class="w-full text-sm">
                 <thead class="bg-gray-50 border-b border-gray-100">
                     <tr class="text-left text-xs text-gray-500 uppercase tracking-wide">
-                        <th class="px-6 py-3 font-medium">Jasa</th>
-                        <th class="px-6 py-3 font-medium">Pembeli</th>
-                        <th class="px-6 py-3 font-medium">Penyedia</th>
-                        <th class="px-6 py-3 font-medium">Harga</th>
-                        <th class="px-6 py-3 font-medium">Status</th>
-                        <th class="px-6 py-3 font-medium">Tanggal</th>
-                        <th class="px-6 py-3 font-medium">Aksi</th>
+                        <th class="px-4 py-3 font-medium">ID Order</th>
+                        <th class="px-4 py-3 font-medium">Jasa</th>
+                        <th class="px-4 py-3 font-medium">Pembeli</th>
+                        <th class="px-4 py-3 font-medium">Penyedia</th>
+                        <th class="px-4 py-3 font-medium">Est. Harga</th>
+                        <th class="px-4 py-3 font-medium">Status</th>
+                        <th class="px-4 py-3 font-medium">Rating</th>
+                        <th class="px-4 py-3 font-medium">Tanggal</th>
+                        <th class="px-4 py-3 font-medium">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
@@ -60,24 +62,40 @@
                             };
                         @endphp
                         <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-3 font-medium text-gray-800 max-w-xs">
+                            <td class="px-4 py-3 text-xs text-gray-500 font-mono whitespace-nowrap">
+                                VSKL-{{ str_pad($order->id, 5, '0', STR_PAD_LEFT) }}
+                            </td>
+                            <td class="px-4 py-3 font-medium text-gray-800 max-w-xs">
                                 {{ $order->service->judul_jasa ?? '-' }}
                             </td>
-                            <td class="px-6 py-3 text-gray-600">{{ $order->buyer->nama_lengkap ?? '-' }}</td>
-                            <td class="px-6 py-3 text-gray-600">{{ $order->seller->nama_lengkap ?? '-' }}</td>
-                            <td class="px-6 py-3 text-gray-800 font-medium">
+                            <td class="px-4 py-3 text-gray-600">{{ $order->buyer->nama_lengkap ?? '-' }}</td>
+                            <td class="px-4 py-3 text-gray-600">{{ $order->seller->nama_lengkap ?? '-' }}</td>
+                            <td class="px-4 py-3 text-gray-800 font-medium whitespace-nowrap">
                                 Rp {{ number_format($order->service->harga ?? 0, 0, ',', '.') }}
                             </td>
-                            <td class="px-6 py-3">
+                            <td class="px-4 py-3">
                                 <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ $cls }}">
                                     {{ ucfirst($order->status) }}
                                 </span>
+                                @if($order->konfirmasi_pembeli)
+                                    <span class="block text-xs text-green-600 mt-0.5">✓ Dikonfirmasi</span>
+                                @endif
                             </td>
-                            <td class="px-6 py-3 text-gray-500 text-xs">
+                            <td class="px-4 py-3 text-xs text-gray-600">
+                                @if($order->rating)
+                                    <span class="text-yellow-500 font-bold">★ {{ number_format($order->rating->rating, 1) }}</span>
+                                    @if($order->rating->ulasan)
+                                        <p class="text-gray-400 mt-0.5 truncate max-w-[120px]" title="{{ $order->rating->ulasan }}">{{ $order->rating->ulasan }}</p>
+                                    @endif
+                                @else
+                                    <span class="text-gray-300">—</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">
                                 {{ $order->created_at?->format('d M Y') }}<br>
                                 <span class="text-gray-400">{{ $order->created_at?->format('H:i') }}</span>
                             </td>
-                            <td class="px-6 py-3">
+                            <td class="px-4 py-3">
                                 <a href="{{ route('order.detail', $order) }}"
                                    class="text-xs px-3 py-1.5 rounded-lg border border-green-300 text-green-700 hover:bg-green-50 transition-colors">
                                     Detail
@@ -86,7 +104,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-6 py-10 text-center text-gray-400">Tidak ada order ditemukan.</td>
+                            <td colspan="9" class="px-6 py-10 text-center text-gray-400">Tidak ada order ditemukan.</td>
                         </tr>
                     @endforelse
                 </tbody>
