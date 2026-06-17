@@ -58,7 +58,7 @@ __IGNORE__ INTO `portfolio` (`id`, `user_id`, `judul_project`, `deskripsi`, `too
 (8,  11, 'Finalis Kompetisi Content Creator - Telkom Indonesia 2025', 'Lolos babak final kompetisi content creator Telkom Indonesia dengan tema digitalisasi UMKM. Menyusun strategi konten dan script video edukasi yang dinilai langsung oleh tim Telkom.',                       'CapCut, Canva, TikTok Studio',           NULL, '2026-06-16 14:07:51'),
 (9,  11, 'Kampanye Digital Produk Batik Lokal Jawa Timur',            'Membuat kampanye digital lengkap untuk brand batik lokal Surabaya - copywriting, desain konten feed Instagram, hingga caption iklan Facebook Ads yang menghasilkan 5x ROAS.',                               'Canva, Google Docs, Meta Ads Manager',   NULL, '2026-06-16 14:07:51'),
 (10, 11, 'Caption Ads Skincare Brand - Engagement Naik 320%',        'Menyusun 30 caption iklan untuk produk skincare lokal selama 1 bulan. Engagement rate naik dari 1.2% ke 5.2% dan direct message meningkat 3x lipat.',                                                       'Notion, Canva, Google Sheets',           NULL, '2026-06-16 14:07:51'),
-(11, 12, 'Juara 1 UI/UX Competition - CompFest 16 Universitas Indonesia', 'Memenangkan kompetisi desain UI/UX tingkat nasional CompFest UI 2025 dengan solusi aplikasi kesehatan mahasiswa. Penilaian meliputi user research, wireframe, prototype, dan presentasi jury.',        'Figma, FigJam, Maze',                    NULL, '2026-06-16 14:07:51'),
+(11, 12, 'Juara 1 UI/UX Competition - CompFest 16 Universitas Indonesia', 'Memenangkan kompetisi desain UI/UX tingkat nasional CompFest UI 2025 dengan solusi aplikasi kesehatan mahasiswa. Penilaian meliputi user research, wireframe, prototype, dan presentasi jury.',        'Figma, FigJam, Maze',                    'https://drive.google.com/file/d/17vRvBiFnHw2-3dtwgPqs9XABBZKWfiUB/view', '2026-06-16 14:07:51'),
 (12, 12, 'Redesign Aplikasi Peminjaman Buku Perpustakaan UPN',        'Redesign total UI/UX aplikasi peminjaman buku perpustakaan UPN berdasarkan riset kepada 40 mahasiswa. Menghasilkan tampilan yang lebih intuitif dan accessibility-friendly.',                              'Figma, Google Forms, Notion',            NULL, '2026-06-16 14:07:51'),
 (13, 12, 'UX Research Aplikasi Transportasi Kampus',                  'Melakukan UX research lengkap (user interview, usability testing, affinity mapping) untuk startup transportasi kampus. Menghasilkan 12 insight kritis dan 8 rekomendasi desain.',                            'FigJam, Maze, Miro, Google Forms',       NULL, '2026-06-16 14:07:51'),
 (16, 16, 'Finalis GEMASTIK XVII - Pengembangan Perangkat Lunak',      'Lolos ke babak final GEMASTIK (Pagelaran Mahasiswa Nasional Bidang TIK) dengan aplikasi manajemen koperasi mahasiswa berbasis web yang dibangun dalam tim 3 orang.',                                        'Laravel, Vue.js, MySQL, Docker',         NULL, '2026-06-16 14:07:51'),
@@ -75,6 +75,10 @@ SQL);
         foreach (preg_split('/;\s*\n/', $sql, -1, PREG_SPLIT_NO_EMPTY) as $statement) {
             DB::unprepared(trim($statement));
         }
+
+        // Update link_demo untuk portfolio yang sudah ada di production
+        DB::table('portfolio')->where('id', 11)->whereNull('link_demo')
+            ->update(['link_demo' => 'https://drive.google.com/file/d/17vRvBiFnHw2-3dtwgPqs9XABBZKWfiUB/view']);
 
         if ($driver === 'sqlite') {
             DB::statement('PRAGMA foreign_keys=ON');

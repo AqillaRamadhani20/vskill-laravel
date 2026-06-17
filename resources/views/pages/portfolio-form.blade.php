@@ -67,14 +67,15 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="link_demo">Link Demo / Repository</label>
+                    <label for="link_demo">Link Sertifikat / Demo / Repository</label>
                     <div class="input-icon-group">
                         <span class="input-icon">🔗</span>
                         <input type="url" id="link_demo" name="link_demo"
                                value="{{ old('link_demo', $portfolio->link_demo ?? '') }}"
-                               placeholder="https://github.com/..."
+                               placeholder="https://drive.google.com/... atau https://github.com/..."
                                class="form-control input-with-icon">
                     </div>
+                    <p class="form-help">Bisa link sertifikat (Google Drive), repository (GitHub), atau demo project</p>
                     @error('link_demo')
                         <p class="form-help" style="color:var(--vs-danger);">{{ $message }}</p>
                     @enderror
