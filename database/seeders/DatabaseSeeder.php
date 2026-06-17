@@ -76,6 +76,25 @@ SQL);
             DB::unprepared(trim($statement));
         }
 
+        // Fix user_id di services/profiles/portfolios agar sinkron dengan ID aktual di production
+        // (INSERT IGNORE pakai ID eksplisit, tapi user di production bisa punya ID auto-increment berbeda)
+        $ownershipMap = [
+            '24082010168@student.upnjatim.ac.id' => ['services' => [1, 2],      'profiles' => [1],      'portfolios' => [5, 6, 7]],
+            '240820150@student.upnjatim.ac.id'   => ['services' => [6],         'profiles' => [11],     'portfolios' => [8, 9, 10]],
+            '2408201046@student.upnjatim.ac.id'  => ['services' => [4, 5],      'profiles' => [10],     'portfolios' => [11, 12, 13]],
+            '24082010171@student.upnjatim.ac.id' => ['services' => [9, 10],     'profiles' => [13],     'portfolios' => [16, 17, 18]],
+            '24082010162@student.upnjatim.ac.id' => ['services' => [11, 12],    'profiles' => [14],     'portfolios' => [19, 20, 21]],
+            '24082010136@student.upnjatim.ac.id' => ['services' => [13, 14],    'profiles' => [15],     'portfolios' => [22, 23, 24]],
+        ];
+
+        foreach ($ownershipMap as $email => $relations) {
+            $user = DB::table('users')->where('email', $email)->first();
+            if (!$user) continue;
+            DB::table('services')->whereIn('id', $relations['services'])->update(['user_id' => $user->id]);
+            DB::table('profiles')->whereIn('id', $relations['profiles'])->update(['user_id' => $user->id]);
+            DB::table('portfolio')->whereIn('id', $relations['portfolios'])->update(['user_id' => $user->id]);
+        }
+
         // Update link_demo untuk portfolio yang sudah ada di production
         DB::table('portfolio')->where('id', 11)->whereNull('link_demo')
             ->update(['link_demo' => 'https://drive.google.com/file/d/17vRvBiFnHw2-3dtwgPqs9XABBZKWfiUB/view']);
